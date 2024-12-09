@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Productos de Verdulería</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #fca8d9;
+        }
+
+        .producto-img {
+            width: 30px; 
+            height: 30px; 
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Verdulería de Yuli</h1>
+        <form id="productoForm">
+            <div class="form-group">
+                <label for="verdura">Selecciona la Verdura Deseada:</label>
+                <select id="verdura" class="form-control" required>
+                    <option value="">Selecciona una verdura</option>
+                    <option value="Brocoli" data-precio="15.00" data-imagen="https://via.placeholder.com/30?text=Brocoli">Brocoli - $15.00</option>
+                    <option value="Tomate" data-precio="18.50" data-imagen="https://via.placeholder.com/30?text=Tomate">Tomate - $18.50</option>
+                    <option value="Lechuga" data-precio="12.20" data-imagen="https://via.placeholder.com/30?text=Lechuga">Lechuga - $12.20</option>
+                    <option value="Zanahoria" data-precio="19.80" data-imagen="https://via.placeholder.com/30?text=Zanahoria">Zanahoria - $19.80</option>
+                    <option value="Cebolla" data-precio="25.00" data-imagen="https://via.placeholder.com/30?text=Cebolla">Cebolla - $25.00</option>
+                    <option value="Pimiento" data-precio="38.00" data-imagen="https://via.placeholder.com/30?text=Pimiento">Pimiento - $38.00</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <input type="number" id="cantidad" class="form-control" placeholder="Cantidad" required min="1" />
+            </div>
+            <button type="submit" class="btn btn-primary">Agregar Producto</button>
+            <button type="button" id="darDeAlta" class="btn btn-success ml-2">Dar de Alta la Verdura</button>
+        </form>
+        <img src="brocoli.jpg" alt="Descripción de la imagen" width="200" height="100">
+        <img src="tomate.jpg" alt="Descripción de la imagen" width="200" height="100">
+        <img src="lechuga.jpg" alt="Descripción de la imagen" width="200" height="100">
+        <img src="zanahoria.jpg" alt="Descripción de la imagen" width="200" height="100">
+        <img src="cebolla.jpg" alt="Descripción de la imagen" width="200" height="100">
+        <img src="pimiento.jpg" alt="Descripción de la imagen" width="200" height="100">
+
+        <h2 class="mt-5">Productos Comprados</h2>
+        <ul id="listaProductos" class="list-group"></ul>
+        <h3 class="mt-3">Total: $<span id="total">0.00</span></h3>
+
+        
+        <button type="button" id="darDeBaja" class="btn btn-danger mt-3">Dar de Baja las Verduras</button>
+        <button type="button" id="consultarInventario" class="btn btn-info mt-3">Consultar Inventario de Verduras</button>
+
+
+        <div id="informe de los Productos adquiridos" class="mt-5">
+            <h3>Informe de Productos</h3>
+            <ul id="informeLista" class="list-group"></ul>
+        </div>
+    </div>
+
+    <script>
+        let total = 0;
+        let productos = [];
+
+        document.getElementById('productoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const verduraSeleccionada = document.getElementById('verdura');
+            const verdura = verduraSeleccionada.value;
+            const precio = parseFloat(verduraSeleccionada.options[verduraSeleccionada.selectedIndex].dataset.precio);
+            const cantidad = parseInt(document.getElementById('cantidad').value);
+            const imagen = verduraSeleccionada.options[verduraSeleccionada.selectedIndex].dataset.imagen;
+
+            if (verdura && cantidad > 0) {
+                agregarProducto(verdura, precio, cantidad, imagen);
+                document.getElementById('productoForm').reset();
+            }
+        });
+
+        function agregarProducto(verdura, precio, cantidad, imagen) {
+            const lista = document.getElementById('listaProductos');
+            const li = document.createElement('li');
+            li.className = 'list-group-item d-flex justify-content-between align-items-center';
+
+            const productoInfo = document.createElement('div');
+            productoInfo.className = 'd-flex align-items-center';
+            const img = document.createElement('img');
+            img.src = imagen; 
+            img.alt = verdura;
+            img.className = 'producto-img';
+            productoInfo.appendChild(img);
+            productoInfo.appendChild(document.createTextNode(`${verdura} - $${precio.toFixed(2)} x ${cantidad}`));
+
+            li.appendChild(productoInfo);
+
+            const subtotal = precio * cantidad;
+            total += subtotal;
+
+            
+            const botonEliminar = document.createElement('button');
+            botonEliminar.className = 'btn btn-danger btn-sm ml-2';
+            botonEliminar.textContent = 'Eliminar';
+            botonEliminar.onclick = function() {
+                total -= subtotal;
+                productos = productos.filter(p => p.verdura !== verdura || p.imagen !== imagen || p.cantidad !== cantidad);
+                actualizarTotal();
+                lista.removeChild(li);
+            };
+
+         
+            const botonModificar = document.createElement('button');
+            botonModificar.className = 'btn btn-warning btn-sm ml-2';
+            botonModificar.textContent = 'Modificar';
+            botonModificar.onclick = function() {
+                modificarProducto(verdura, precio, cantidad, imagen, li);
+            };
+
+            li.appendChild(botonEliminar);
+            li.appendChild(botonModificar);
+            lista.appendChild(li);
+
+            productos.push({verdura, precio, cantidad, imagen});
+            actualizarTotal();
+        }
+
+       
+        function modificarProducto(verdura, precio, cantidad, imagen, li) {
+            const nuevaCantidad = prompt(`Modificar cantidad de ${verdura}`, cantidad);
+            if (nuevaCantidad && nuevaCantidad > 0) {
+                const subtotalAnterior = precio * cantidad;
+                const subtotalNuevo = precio * nuevaCantidad;
+                total += (subtotalNuevo - subtotalAnterior);
+
+                cantidad = nuevaCantidad;
+                li.querySelector('div').childNodes[1].nodeValue = `${verdura} - $${precio.toFixed(2)} x ${cantidad}`;
+                actualizarTotal();
+            }
+        }
+
+        function actualizarTotal() {
+            document.getElementById('total').textContent = total.toFixed(2);
+        }
+
+   
+        document.getElementById('darDeBaja').addEventListener('click', function() {
+            if (confirm('¿Estás seguro de que deseas dar de baja todos los productos?')) {
+                productos = [];  
+                total = 0;       
+                actualizarTotal(); 
+                document.getElementById('listaProductos').innerHTML = ''; 
+            }
+        });
+
+    
+        document.getElementById('consultarInventario').addEventListener('click', function() {
+            mostrarInforme();
+        });
+
+        
+        function mostrarInforme() {
+            const informeLista = document.getElementById('informeLista');
+            informeLista.innerHTML = ''; 
+
+            if (productos.length === 0) {
+                informeLista.innerHTML = '<li class="list-group-item">No hay productos en el inventario.</li>';
+            } else {
+                productos.forEach(producto => {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item d-flex justify-content-between align-items-center';
+
+                    li.textContent = `${producto.verdura} - $${producto.precio.toFixed(2)} x ${producto.cantidad}`;
+                    informeLista.appendChild(li);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
